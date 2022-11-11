@@ -1,4 +1,4 @@
-package COLORS;
+package Colors;
 
 /**
  * @project SubstrFinder

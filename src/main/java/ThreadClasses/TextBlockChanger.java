@@ -1,6 +1,6 @@
 package ThreadClasses;
 
-import COLORS.ConsoleColors;
+import Colors.ConsoleColors;
 import FileWorkers.FileCommunicator;
 
 import java.io.IOException;

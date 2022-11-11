@@ -31,7 +31,7 @@ public class ThreadSeeker implements Runnable {
     private int currentStartPosInBlock = 0;
     private final GapsFinder gapsFinder;
 
-    public ThreadSeeker(FileCommunicator fileCommunicator, CyclicBarrier cyclicBarrier, GapsFinder gapsFinder) throws InterruptedException {
+    public ThreadSeeker(FileCommunicator fileCommunicator, CyclicBarrier cyclicBarrier, GapsFinder gapsFinder){
         this.gapsFinder = gapsFinder;
         this.fileCommunicator = fileCommunicator;
         id = threadID++;
@@ -71,20 +71,18 @@ public class ThreadSeeker implements Runnable {
         for (String threadLine : threadLines) {
             boolean isGap = gapsFinder.isLogAGap(threadLine);
             if(isGap){
-//                System.out.println("--------------------------------------------------");
-//                System.out.println(threadLine);
                 Pair<LocalDate, LocalTime> requestDateAndTime = gapsFinder.getTimeOfRequestForResult(threadLine);
-//                System.out.println("Date of start request = " + requestDateAndTime.first);
-//                System.out.println("Time of start request = " + requestDateAndTime.second);
-//                System.out.println("--------------------------------------------------");
-                List<String> outPutText = new ArrayList<>();
-                outPutText.add("--------------------------------------------------");
-                outPutText.add("Date of start request = " + requestDateAndTime.first);
-                outPutText.add("Date of start request = " + requestDateAndTime.first);
-                outPutText.add("Time of start request = " + requestDateAndTime.second);
-                outPutText.add("--------------------------------------------------");
-                fileCommunicator.insertGapTextInQueueForOutput(outPutText);
+                outPutGapInFile(threadLine, requestDateAndTime);
             }
         }
+    }
+
+    private void outPutGapInFile(String threadLine, Pair<LocalDate, LocalTime> requestDateAndTime) {
+        List<String> outPutText = new ArrayList<>();
+        outPutText.add("--------------------------------------------------");
+        outPutText.add(requestDateAndTime.first + " " + requestDateAndTime.second + " request date and time.");
+        outPutText.add(threadLine);
+        outPutText.add("--------------------------------------------------");
+        fileCommunicator.insertGapTextInQueueForOutput(outPutText);
     }
 }

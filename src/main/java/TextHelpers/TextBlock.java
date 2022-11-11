@@ -11,16 +11,6 @@ import static Settings.CONSTANTS.THREAD_READ_LINES_VALUE;
  */
 public class TextBlock {
     private List<String> textLines = new ArrayList<>();
-    private final int posInAllText;
-
-    public TextBlock(){
-        posInAllText = 0;
-    }
-
-    public TextBlock(int posInAllText, List<String> textLines){
-        this.posInAllText = posInAllText;
-        this.textLines = textLines;
-    }
 
     public List<String> getThreadPartOfText(int partValue) {
         if(textLines.isEmpty()){
@@ -35,14 +25,6 @@ public class TextBlock {
             return new ArrayList<>(textLines.subList(leftEdge, textLines.size()));
         }
         return new ArrayList<>(textLines.subList(leftEdge, (partValue + 1) * THREAD_READ_LINES_VALUE));
-    }
-
-    public List<String> getTextLines() {
-        return textLines;
-    }
-
-    public int getPosInAllText(){
-        return posInAllText;
     }
 
     public void setTextLines(List<String> textLines) {

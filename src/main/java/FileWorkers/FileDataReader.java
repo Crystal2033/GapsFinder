@@ -13,10 +13,10 @@ public class FileDataReader {
 
     public FileDataReader(String fileName) throws IOException {
         file = new File(fileName);
-        fileInputStream = new FileInputStream(file);
         if (!file.exists()) {
             throw new FileNotFoundException("File " + file.getName() + " was not found.");
         }
+        fileInputStream = new FileInputStream(file);
         FileReader fileReader = new FileReader(file);
         bufferedReader = new BufferedReader(fileReader);
     }

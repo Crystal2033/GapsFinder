@@ -1,8 +1,6 @@
 
 package Settings;
 
-import java.time.LocalTime;
-
 /**
  * @project SubstrFinder
  * ©Crystal2033

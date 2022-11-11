@@ -1,13 +1,11 @@
 package Mechanic;
 
-import COLORS.ConsoleColors;
 import Converters.DateConverter;
 import Converters.TimeConverter;
 import Exceptions.LogFileException;
 import HelpCollections.Pair;
 import Settings.CONSTANTS;
 
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Map;
@@ -45,7 +43,7 @@ public class GapsFinder {
     }
 
 
-    public boolean isLogAGap(String logStr) throws LogFileException, ParseException {
+    public boolean isLogAGap(String logStr) throws LogFileException{
         Matcher matcher = pattern.matcher(logStr);
         if(!matcher.find()){
             throw new LogFileException("Log file consists unpredictable values. Check it out.");
@@ -54,10 +52,6 @@ public class GapsFinder {
         LocalTime time = getTimeFromRegexMatcher(matcher);
         RequestStatus requestStatus = getReqStatusFromRegexMatcher(matcher);
         int requestId = getReqIDFromRegexMatcher(matcher);
-//        System.out.println(RegexPart.DATE + " = " + ConsoleColors.YELLOW_BRIGHT +  date + ConsoleColors.RESET);
-//        System.out.println(RegexPart.TIME + " = " + ConsoleColors.YELLOW_BRIGHT + time+ ConsoleColors.RESET);
-//        System.out.println(RegexPart.REQUEST_STATUS + " = " + ConsoleColors.YELLOW_BRIGHT + requestStatus+ ConsoleColors.RESET);
-//        System.out.println(RegexPart.REQ_ID + " = " + ConsoleColors.YELLOW_BRIGHT + requestId+ ConsoleColors.RESET);
 
         if(requestStatus == RequestStatus.REQUEST){
             insertDataInMap(date, time, requestId);
@@ -84,8 +78,8 @@ public class GapsFinder {
         return requestsWithTime.get(Integer.parseInt(matcher.group(RegexPart.REQ_ID.getValue())));
     }
 
-    public int getValueOfCheckedGaps(){
-        return valueOfCheckedGaps;
+    public int getValueOfGaps(){
+        return valueOfGaps;
     }
 
     private void insertDataInMap(LocalDate localDate, LocalTime time, int requestID){
@@ -110,9 +104,6 @@ public class GapsFinder {
             int prevValOfGaps = valueOfCheckedGaps;
             valueOfCheckedGaps++;
             avgTimeInLong = (avgTimeInLong * prevValOfGaps + deltaTime) / valueOfCheckedGaps;
-//            System.out.println(ConsoleColors.YELLOW_BRIGHT + "Delta time is: " + ConsoleColors.CYAN_BRIGHT + deltaTime + ConsoleColors.RESET);
-//            System.out.println(ConsoleColors.YELLOW_BRIGHT + "Average time is: " + ConsoleColors.CYAN_BRIGHT + avgTimeInLong + ConsoleColors.RESET);
-//            System.out.println("--------------------------------------------------------------------------------------");
         }
         return false;
     }
@@ -145,7 +136,7 @@ public class GapsFinder {
         return DateConverter.getDate(matcher.group(RegexPart.DATE.getValue()));
     }
 
-    private LocalTime getTimeFromRegexMatcher(Matcher matcher) throws ParseException {
+    private LocalTime getTimeFromRegexMatcher(Matcher matcher){
         return TimeConverter.getTime(matcher.group(RegexPart.TIME.getValue()));
     }
 

@@ -1,6 +1,5 @@
 package Converters;
 
-import java.text.ParseException;
 import java.time.LocalTime;
 
 /**
@@ -9,7 +8,7 @@ import java.time.LocalTime;
  * @date 11/11/2022
  */
 public class TimeConverter {
-    public static LocalTime getTime(String timeStr) throws ParseException {
+    public static LocalTime getTime(String timeStr){
         return LocalTime.parse(timeStr);
     }
 
@@ -19,12 +18,5 @@ public class TimeConverter {
         timeValue += time.getMinute() * 60;
         timeValue += time.getSecond();
         return timeValue;
-    }
-
-    public static LocalTime fromSecondsToTime(long timeInSec){
-            int hour = (int) (timeInSec / 3600);
-            int min = (int) ((timeInSec % 3600) / 60);
-            int sec = (int) ((timeInSec % 3600) % 60);
-            return LocalTime.of(hour, min, sec);
     }
 }

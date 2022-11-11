@@ -1,10 +1,10 @@
 package FileWorkers;
 
-import COLORS.ConsoleColors;
 import TextHelpers.TextBlock;
+
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.PriorityBlockingQueue;
+
 import static Settings.CONSTANTS.VALUE_OF_LINES_IN_BLOCK;
 /**
  * @project FindGAP
@@ -48,10 +48,6 @@ public class FileCommunicator {
     public void closeBuffers() throws IOException {
         fileDataWriter.closeWriter();
         fileDataReader.closeReader();
-    }
-
-    public void insertGapInQueueForOutput(String gap) {
-        queueForOutputText.add(gap);
     }
 
     public void insertGapTextInQueueForOutput(List<String> gapsText){

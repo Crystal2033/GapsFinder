@@ -2,8 +2,6 @@ package TextHelpers;
 
 import Exceptions.BadArgsException;
 
-import static Settings.CONSTANTS.VALUE_OF_LINES_IN_BLOCK;
-
 /**
  * @project SubstrFinder
  * ©Crystal2033
