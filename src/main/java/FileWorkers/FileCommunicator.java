@@ -38,6 +38,7 @@ public class FileCommunicator {
         foundGaps += queueForOutputText.size();
         List<String> allFoundTextList = new LinkedList<>(queueForOutputText.stream().toList());
         fileDataWriter.writeLines(allFoundTextList);
+        queueForOutputText.clear();
 
     }
     public void reopenFiles() throws IOException {
