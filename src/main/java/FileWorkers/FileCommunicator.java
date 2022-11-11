@@ -25,7 +25,7 @@ public class FileCommunicator {
         fileSize = fileDataReader.getFileSize();
         fileDataWriter = new FileDataWriter(outputFileName);
         currentBlock = new TextBlock();
-        queueForOutputText = new PriorityBlockingQueue<>(1);
+        queueForOutputText = new ArrayDeque<>();
         initTextBlock();
     }
 
@@ -40,14 +40,22 @@ public class FileCommunicator {
         fileDataWriter.writeLines(allFoundTextList);
 
     }
+    public void reopenFiles() throws IOException {
+        fileDataReader.resetBuffer();
+        initTextBlock();
+    }
 
     public void closeBuffers() throws IOException {
         fileDataWriter.closeWriter();
         fileDataReader.closeReader();
     }
 
-    public void insertGapsInQueueForOutput(String gap) {
+    public void insertGapInQueueForOutput(String gap) {
         queueForOutputText.add(gap);
+    }
+
+    public void insertGapTextInQueueForOutput(List<String> gapsText){
+        queueForOutputText.addAll(gapsText);
     }
 
     public TextBlock getCurrentBlock() {

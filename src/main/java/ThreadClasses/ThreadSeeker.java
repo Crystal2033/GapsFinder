@@ -2,10 +2,14 @@ package ThreadClasses;
 
 import Exceptions.LogFileException;
 import FileWorkers.FileCommunicator;
+import HelpCollections.Pair;
 import Mechanic.GapsFinder;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -65,7 +69,22 @@ public class ThreadSeeker implements Runnable {
     private void workWithPartOfText() throws IOException, LogFileException, ParseException {
         List<String> threadLines = fileCommunicator.getCurrentBlock().getThreadPartOfText(id + VALUE_OF_THREADS * alreadyCheckedBlocks);
         for (String threadLine : threadLines) {
-            gapsFinder.isLogAGap(threadLine);
+            boolean isGap = gapsFinder.isLogAGap(threadLine);
+            if(isGap){
+//                System.out.println("--------------------------------------------------");
+//                System.out.println(threadLine);
+                Pair<LocalDate, LocalTime> requestDateAndTime = gapsFinder.getTimeOfRequestForResult(threadLine);
+//                System.out.println("Date of start request = " + requestDateAndTime.first);
+//                System.out.println("Time of start request = " + requestDateAndTime.second);
+//                System.out.println("--------------------------------------------------");
+                List<String> outPutText = new ArrayList<>();
+                outPutText.add("--------------------------------------------------");
+                outPutText.add("Date of start request = " + requestDateAndTime.first);
+                outPutText.add("Date of start request = " + requestDateAndTime.first);
+                outPutText.add("Time of start request = " + requestDateAndTime.second);
+                outPutText.add("--------------------------------------------------");
+                fileCommunicator.insertGapTextInQueueForOutput(outPutText);
+            }
         }
     }
 }

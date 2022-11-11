@@ -1,20 +1,20 @@
 package Mechanic;
 
 import COLORS.ConsoleColors;
+import Converters.DateConverter;
+import Converters.TimeConverter;
 import Exceptions.LogFileException;
 import HelpCollections.Pair;
+import Settings.CONSTANTS;
 
-import java.io.Console;
-import java.sql.Time;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Date;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * @project DataBaseGAPChecking
@@ -22,24 +22,28 @@ import java.util.regex.Pattern;
  * @date 10/11/2022
  */
 public class GapsFinder {
-    private final String regex = "(\\d{4}-\\d{2}-\\d{2}) *\\s* (\\d{2}:\\d{2}:\\d{2}) - INFO -\\s*(RESULT)? QUERY FOR ID = (\\d*)";
     private final Pattern pattern;
-    private final Map<Integer, Pair<LocalDate, Time>> requestsWithTime;
-    private Time averageTime;
-    private final boolean isUserAvgTime;
-    int valueOfCheckedGaps = 0;
+    private final Map<Integer, Pair<LocalDate, LocalTime>> requestsWithTime;
 
-    public GapsFinder(Time avgTime) {
+    private long avgTimeInLong;
+    private boolean isUserAvgTime;
+    private int valueOfCheckedGaps = 0;
+    int valueOfGaps = 0;
+
+    public GapsFinder(LocalTime avgTime){
         if(avgTime == null){
             isUserAvgTime = false;
+            avgTimeInLong = 0L;
         }
         else{
-            averageTime = avgTime;
+            avgTimeInLong = TimeConverter.fromTimeToSeconds(avgTime);
             isUserAvgTime = true;
         }
         requestsWithTime = new ConcurrentHashMap<>();
+        String regex = "(\\d{4}-\\d{2}-\\d{2}) *\\s* (\\d{2}:\\d{2}:\\d{2}) - INFO -\\s*(RESULT)? QUERY FOR ID = (\\d*)";
         pattern = Pattern.compile(regex);
     }
+
 
     public boolean isLogAGap(String logStr) throws LogFileException, ParseException {
         Matcher matcher = pattern.matcher(logStr);
@@ -47,14 +51,14 @@ public class GapsFinder {
             throw new LogFileException("Log file consists unpredictable values. Check it out.");
         }
         LocalDate date = getDateFromRegexMatcher(matcher);
-        Time time = getTimeFromRegexMatcher(matcher);
+        LocalTime time = getTimeFromRegexMatcher(matcher);
         RequestStatus requestStatus = getReqStatusFromRegexMatcher(matcher);
         int requestId = getReqIDFromRegexMatcher(matcher);
-        System.out.println(RegexPart.DATE + " = " + ConsoleColors.YELLOW_BRIGHT +  date + ConsoleColors.RESET);
-        System.out.println(RegexPart.TIME + " = " + ConsoleColors.YELLOW_BRIGHT + time+ ConsoleColors.RESET);
-        System.out.println(RegexPart.REQUEST_STATUS + " = " + ConsoleColors.YELLOW_BRIGHT + requestStatus+ ConsoleColors.RESET);
-        System.out.println(RegexPart.REQ_ID + " = " + ConsoleColors.YELLOW_BRIGHT + requestId+ ConsoleColors.RESET);
-        System.out.println("--------------------------------------------------------------------------------------");
+//        System.out.println(RegexPart.DATE + " = " + ConsoleColors.YELLOW_BRIGHT +  date + ConsoleColors.RESET);
+//        System.out.println(RegexPart.TIME + " = " + ConsoleColors.YELLOW_BRIGHT + time+ ConsoleColors.RESET);
+//        System.out.println(RegexPart.REQUEST_STATUS + " = " + ConsoleColors.YELLOW_BRIGHT + requestStatus+ ConsoleColors.RESET);
+//        System.out.println(RegexPart.REQ_ID + " = " + ConsoleColors.YELLOW_BRIGHT + requestId+ ConsoleColors.RESET);
+
         if(requestStatus == RequestStatus.REQUEST){
             insertDataInMap(date, time, requestId);
         }
@@ -64,41 +68,85 @@ public class GapsFinder {
         return false;
     }
 
-    public Time getAverageTime(){
-        return averageTime;
+    public long getAverageTime(){
+        return avgTimeInLong;
     }
 
-    private void insertDataInMap(LocalDate localDate, Time time, int requestID){
-        Pair<LocalDate, Time> dateTimePair = Pair.create(localDate, time);
+    public void setAverageTime(long avgTime){
+        avgTimeInLong = avgTime;
+        isUserAvgTime = true;
+    }
+    public Pair<LocalDate, LocalTime> getTimeOfRequestForResult(String resultReq) throws LogFileException {
+        Matcher matcher = pattern.matcher(resultReq);
+        if(!matcher.find()){
+            throw new LogFileException("Unpredictable mistake");
+        }
+        return requestsWithTime.get(Integer.parseInt(matcher.group(RegexPart.REQ_ID.getValue())));
+    }
+
+    public int getValueOfCheckedGaps(){
+        return valueOfCheckedGaps;
+    }
+
+    private void insertDataInMap(LocalDate localDate, LocalTime time, int requestID){
+        Pair<LocalDate, LocalTime> dateTimePair = Pair.create(localDate, time);
         requestsWithTime.put(requestID, dateTimePair);
     }
 
-    private boolean isGap(LocalDate localDate, Time time, int requestID){
-        Pair<LocalDate, Time> dateTimePair = requestsWithTime.get(requestID);
-        long deltaTime = dateTimePair.second.getTime() - time.getTime();
+    private boolean isGap(LocalDate resultDate, LocalTime resultTime, int requestID){
+        Pair<LocalDate, LocalTime> requestDateTimePair = requestsWithTime.get(requestID);
+        long deltaTime = getDeltaDateTime(requestDateTimePair.first, requestDateTimePair.second, resultDate, resultTime);
+        if(deltaTime > CONSTANTS.SECONDS_IN_DAY){
+            return true;
+        }
 
         if(isUserAvgTime){
-            return averageTime.getTime() < deltaTime;
+            if(avgTimeInLong < deltaTime){
+                valueOfGaps++;
+                return true;
+            }
         }
         else{
-            long newAvgTime = (averageTime.getTime()*valueOfCheckedGaps + deltaTime) / ++valueOfCheckedGaps;
-            averageTime.setTime(newAvgTime);
-            System.out.println(ConsoleColors.YELLOW_BRIGHT + "Average time is: " + ConsoleColors.CYAN_BRIGHT + averageTime + ConsoleColors.RESET);
-            return false;
+            int prevValOfGaps = valueOfCheckedGaps;
+            valueOfCheckedGaps++;
+            avgTimeInLong = (avgTimeInLong * prevValOfGaps + deltaTime) / valueOfCheckedGaps;
+//            System.out.println(ConsoleColors.YELLOW_BRIGHT + "Delta time is: " + ConsoleColors.CYAN_BRIGHT + deltaTime + ConsoleColors.RESET);
+//            System.out.println(ConsoleColors.YELLOW_BRIGHT + "Average time is: " + ConsoleColors.CYAN_BRIGHT + avgTimeInLong + ConsoleColors.RESET);
+//            System.out.println("--------------------------------------------------------------------------------------");
         }
+        return false;
     }
 
-    private Pair<Integer, Date> parseLogAndGet(String logStr) {
-        return new Pair<Integer, Date>(1, null);
+    private long getDeltaDateTime(LocalDate requestDate, LocalTime requestTime, LocalDate resultDate, LocalTime resultTime) {
+        int deltaYear = resultDate.getYear() - requestDate.getYear();
+        int deltaMonth = resultDate.getMonthValue() - requestDate.getMonthValue();
+        int deltaDay = resultDate.getDayOfMonth() - requestDate.getDayOfMonth();
+        if(deltaYear > 0 || deltaMonth > 0 || deltaDay > 1){
+            return CONSTANTS.SECONDS_IN_DAY;
+        }
+
+        if(deltaDay == 1){
+            long maxDayTime = CONSTANTS.SECONDS_IN_DAY;
+            long timeRequest = TimeConverter.fromTimeToSeconds(requestTime);
+            long timeOfPrevDayToItsEnd = maxDayTime - timeRequest;
+            long timeResult = TimeConverter.fromTimeToSeconds(resultTime);
+            return timeResult + timeOfPrevDayToItsEnd;
+        }
+
+        long dateTime = 0;
+        int hour = resultTime.getHour() - requestTime.getHour();
+        int min = resultTime.getMinute() - requestTime.getMinute();
+        int sec = resultTime.getSecond() - requestTime.getSecond();
+        dateTime += TimeConverter.fromTimeToSeconds(LocalTime.of(hour, min, sec));
+        return dateTime;
     }
 
     private LocalDate getDateFromRegexMatcher(Matcher matcher) {
-        return LocalDate.parse(matcher.group(RegexPart.DATE.getValue()));
+        return DateConverter.getDate(matcher.group(RegexPart.DATE.getValue()));
     }
 
-    private Time getTimeFromRegexMatcher(Matcher matcher) throws ParseException {
-        DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-        return new java.sql.Time(formatter.parse(matcher.group(RegexPart.TIME.getValue())).getTime());
+    private LocalTime getTimeFromRegexMatcher(Matcher matcher) throws ParseException {
+        return TimeConverter.getTime(matcher.group(RegexPart.TIME.getValue()));
     }
 
     private RequestStatus getReqStatusFromRegexMatcher(Matcher matcher) {

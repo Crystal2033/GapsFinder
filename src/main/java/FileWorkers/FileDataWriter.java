@@ -16,7 +16,6 @@ public class FileDataWriter {
 
         FileWriter fileWriter = new FileWriter(file);
         bufferedWriter = new BufferedWriter(fileWriter);
-
     }
 
     synchronized public void writeLines(List<String> lines) throws IOException {

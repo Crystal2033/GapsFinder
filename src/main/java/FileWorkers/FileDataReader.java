@@ -7,16 +7,23 @@ import java.io.*;
  * @date 21/10/2022
  */
 public class FileDataReader {
-    private final BufferedReader bufferedReader;
+    private BufferedReader bufferedReader;
     private final File file;
+    private final FileInputStream fileInputStream;
 
     public FileDataReader(String fileName) throws IOException {
         file = new File(fileName);
+        fileInputStream = new FileInputStream(file);
         if (!file.exists()) {
             throw new FileNotFoundException("File " + file.getName() + " was not found.");
         }
         FileReader fileReader = new FileReader(file);
         bufferedReader = new BufferedReader(fileReader);
+    }
+
+    public void resetBuffer() throws IOException {
+        fileInputStream.getChannel().position(0);
+        bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
     }
 
     public String getNextLine() throws IOException {
