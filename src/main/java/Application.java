@@ -4,6 +4,10 @@ import ThreadClasses.TextBlockChanger;
 import ThreadClasses.ThreadSeeker;
 
 import java.io.IOException;
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
@@ -27,10 +31,21 @@ public class Application {
         final String inFileName = PATH + "in.txt";
         final String outFileName = PATH + "out.txt";
 
+        String avgTimeStr = "00:00:01";
+        DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+        Time avgTime = null;
+        try {
+            avgTime = new java.sql.Time(formatter.parse(avgTimeStr).getTime());
+        }
+        catch (ParseException exception){
+            System.out.println(exception.getMessage());
+        }
+
+
         FileCommunicator fileCommunicator = new FileCommunicator(inFileName, outFileName);
         CyclicBarrier cyclicBarrier = new CyclicBarrier(VALUE_OF_THREADS, new TextBlockChanger(fileCommunicator));
         ExecutorService threadingFixedPool = Executors.newFixedThreadPool(VALUE_OF_THREADS);
-        GapsFinder gapsFinder = new GapsFinder();
+        GapsFinder gapsFinder = new GapsFinder(null);
 
         List<ThreadSeeker> listOfThreads = new ArrayList<>();
         for (int i = 0; i < VALUE_OF_THREADS; i++) {

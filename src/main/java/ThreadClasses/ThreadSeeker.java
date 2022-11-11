@@ -3,11 +3,9 @@ package ThreadClasses;
 import Exceptions.LogFileException;
 import FileWorkers.FileCommunicator;
 import Mechanic.GapsFinder;
-import TextHelpers.TextBlock;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -67,7 +65,7 @@ public class ThreadSeeker implements Runnable {
     private void workWithPartOfText() throws IOException, LogFileException, ParseException {
         List<String> threadLines = fileCommunicator.getCurrentBlock().getThreadPartOfText(id + VALUE_OF_THREADS * alreadyCheckedBlocks);
         for (String threadLine : threadLines) {
-            gapsFinder.checkLogForGap(threadLine);
+            gapsFinder.isLogAGap(threadLine);
         }
     }
 }

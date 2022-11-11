@@ -4,6 +4,7 @@ import COLORS.ConsoleColors;
 import Exceptions.LogFileException;
 import HelpCollections.Pair;
 
+import java.io.Console;
 import java.sql.Time;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -23,15 +24,24 @@ import java.util.regex.Pattern;
 public class GapsFinder {
     private final String regex = "(\\d{4}-\\d{2}-\\d{2}) *\\s* (\\d{2}:\\d{2}:\\d{2}) - INFO -\\s*(RESULT)? QUERY FOR ID = (\\d*)";
     private final Pattern pattern;
-    private final Map<Integer, Date> requestsWithTime;
+    private final Map<Integer, Pair<LocalDate, Time>> requestsWithTime;
     private Time averageTime;
+    private final boolean isUserAvgTime;
+    int valueOfCheckedGaps = 0;
 
-    public GapsFinder() {
-        requestsWithTime = new ConcurrentHashMap<Integer, Date>();
+    public GapsFinder(Time avgTime) {
+        if(avgTime == null){
+            isUserAvgTime = false;
+        }
+        else{
+            averageTime = avgTime;
+            isUserAvgTime = true;
+        }
+        requestsWithTime = new ConcurrentHashMap<>();
         pattern = Pattern.compile(regex);
     }
 
-    public void checkLogForGap(String logStr) throws LogFileException, ParseException {
+    public boolean isLogAGap(String logStr) throws LogFileException, ParseException {
         Matcher matcher = pattern.matcher(logStr);
         if(!matcher.find()){
             throw new LogFileException("Log file consists unpredictable values. Check it out.");
@@ -45,6 +55,37 @@ public class GapsFinder {
         System.out.println(RegexPart.REQUEST_STATUS + " = " + ConsoleColors.YELLOW_BRIGHT + requestStatus+ ConsoleColors.RESET);
         System.out.println(RegexPart.REQ_ID + " = " + ConsoleColors.YELLOW_BRIGHT + requestId+ ConsoleColors.RESET);
         System.out.println("--------------------------------------------------------------------------------------");
+        if(requestStatus == RequestStatus.REQUEST){
+            insertDataInMap(date, time, requestId);
+        }
+        else if(requestStatus == RequestStatus.RESULT){
+            return isGap(date, time, requestId);
+        }
+        return false;
+    }
+
+    public Time getAverageTime(){
+        return averageTime;
+    }
+
+    private void insertDataInMap(LocalDate localDate, Time time, int requestID){
+        Pair<LocalDate, Time> dateTimePair = Pair.create(localDate, time);
+        requestsWithTime.put(requestID, dateTimePair);
+    }
+
+    private boolean isGap(LocalDate localDate, Time time, int requestID){
+        Pair<LocalDate, Time> dateTimePair = requestsWithTime.get(requestID);
+        long deltaTime = dateTimePair.second.getTime() - time.getTime();
+
+        if(isUserAvgTime){
+            return averageTime.getTime() < deltaTime;
+        }
+        else{
+            long newAvgTime = (averageTime.getTime()*valueOfCheckedGaps + deltaTime) / ++valueOfCheckedGaps;
+            averageTime.setTime(newAvgTime);
+            System.out.println(ConsoleColors.YELLOW_BRIGHT + "Average time is: " + ConsoleColors.CYAN_BRIGHT + averageTime + ConsoleColors.RESET);
+            return false;
+        }
     }
 
     private Pair<Integer, Date> parseLogAndGet(String logStr) {
