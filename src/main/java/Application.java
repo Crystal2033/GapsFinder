@@ -1,3 +1,4 @@
+import Colors.ConsoleColors;
 import Converters.TimeConverter;
 import Exceptions.BadArgsException;
 import FileWorkers.FileCommunicator;
@@ -24,7 +25,15 @@ import static Settings.CONSTANTS.VALUE_OF_THREADS;
  */
 public class Application {
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
+
+        System.out.println(ConsoleColors.CYAN_BOLD + "Developer: " + ConsoleColors.BLUE_BOLD
+                + "Kulikov Pavel, M8O-311");
+        System.out.println(ConsoleColors.PURPLE_BOLD + "This program is able to find gaps in your log file " +
+                "with setting average time with" + ConsoleColors.BLUE_BOLD + " hh:mm:ss" + ConsoleColors.PURPLE_BOLD + " style. Or program will choose" +
+                " own average time if user does not set it." + ConsoleColors.RESET);
+
+        System.out.println();
         try {
             ArgsConverter argsConverter = new ArgsConverter(args);
             final String inFileName = argsConverter.getInputFileName();
@@ -43,7 +52,7 @@ public class Application {
             foundAndOutputGaps(fileCommunicator, cyclicBarrier, gapsFinder);
 
             if (avgTimeStr == null) {
-                fileCommunicator.reopenFiles();
+                fileCommunicator.reset();
                 gapsFinder.setAverageTime(gapsFinder.getAverageTime());
                 foundAndOutputGaps(fileCommunicator, cyclicBarrier, gapsFinder);
             }
@@ -51,13 +60,12 @@ public class Application {
             System.out.println(Colors.ConsoleColors.GREEN_BRIGHT + "Work is done." + Colors.ConsoleColors.RESET + " Check " + outFileName +
                     " file. Was found " + Colors.ConsoleColors.CYAN_BRIGHT + gapsFinder.getValueOfGaps() + " GAP`s.");
             fileCommunicator.closeBuffers();
-        }
-        catch (BadArgsException | IOException | InterruptedException | DateTimeParseException exception) {
+        } catch (BadArgsException | IOException | InterruptedException | DateTimeParseException exception) {
             System.out.println(exception.getMessage());
         }
     }
 
-    private static void foundAndOutputGaps(FileCommunicator fileCommunicator, CyclicBarrier cyclicBarrier,  GapsFinder gapsFinder) throws InterruptedException {
+    private static void foundAndOutputGaps(FileCommunicator fileCommunicator, CyclicBarrier cyclicBarrier, GapsFinder gapsFinder) throws InterruptedException {
         ExecutorService threadingFixedPool = Executors.newFixedThreadPool(VALUE_OF_THREADS);
         List<ThreadSeeker> listOfThreads = new ArrayList<>();
         for (int i = 0; i < VALUE_OF_THREADS; i++) {

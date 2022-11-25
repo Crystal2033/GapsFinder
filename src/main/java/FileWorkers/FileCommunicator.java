@@ -41,9 +41,15 @@ public class FileCommunicator {
         queueForOutputText.clear();
 
     }
-    public void reopenFiles() throws IOException {
-        fileDataReader.resetBuffer();
+
+    public void reset() throws IOException {
+        reopenFiles();
+        bytesAlreadyChecked = 0;
+        foundGaps = 0;
         initTextBlock();
+    }
+    private void reopenFiles() throws IOException {
+        fileDataReader.resetBuffer();
     }
 
     public void closeBuffers() throws IOException {
