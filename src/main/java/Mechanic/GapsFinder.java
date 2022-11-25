@@ -8,8 +8,8 @@ import Settings.CONSTANTS;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,7 +37,7 @@ public class GapsFinder {
             avgTimeInLong = TimeConverter.fromTimeToSeconds(avgTime);
             isUserAvgTime = true;
         }
-        requestsWithTime = new ConcurrentHashMap<>();
+        requestsWithTime = new HashMap<>();
         String regex = "(\\d{4}-\\d{2}-\\d{2}) *\\s* (\\d{2}:\\d{2}:\\d{2}) - INFO -\\s*(RESULT)? QUERY FOR ID = (\\d*)";
         pattern = Pattern.compile(regex);
     }

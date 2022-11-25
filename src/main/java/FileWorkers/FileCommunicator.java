@@ -15,17 +15,13 @@ public class FileCommunicator {
     private final FileDataReader fileDataReader;
     private final FileDataWriter fileDataWriter;
     private final TextBlock currentBlock;
-    private final Queue<String> queueForOutputText;
-    private final long fileSize;
     private long bytesAlreadyChecked;
     private int foundGaps = 0;
 
     public FileCommunicator(String inputFilename, String outputFileName) throws IOException {
         fileDataReader = new FileDataReader(inputFilename);
-        fileSize = fileDataReader.getFileSize();
         fileDataWriter = new FileDataWriter(outputFileName);
         currentBlock = new TextBlock();
-        queueForOutputText = new ArrayDeque<>();
         initTextBlock();
     }
 
@@ -34,12 +30,9 @@ public class FileCommunicator {
         insertTextFromFileInBlock(currentBlock);
     }
 
-    public void insertTextInOutputFile() throws IOException {
-        foundGaps += queueForOutputText.size();
-        List<String> allFoundTextList = new LinkedList<>(queueForOutputText.stream().toList());
-        fileDataWriter.writeLines(allFoundTextList);
-        queueForOutputText.clear();
-
+    public void insertTextInOutputFile(List<String> lines) throws IOException {
+        foundGaps++;
+        fileDataWriter.writeLines(lines);
     }
 
     public void reset() throws IOException {
@@ -57,9 +50,6 @@ public class FileCommunicator {
         fileDataReader.closeReader();
     }
 
-    public void insertGapTextInQueueForOutput(List<String> gapsText){
-        queueForOutputText.addAll(gapsText);
-    }
 
     public TextBlock getCurrentBlock() {
         return currentBlock;
@@ -70,7 +60,7 @@ public class FileCommunicator {
     }
 
     public long getFileSize() {
-        return fileSize;
+        return fileDataReader.getFileSize();
     }
 
     public int getFoundGaps() {
